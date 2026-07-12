@@ -26,9 +26,10 @@ find_path(EIGEN3_INCLUDE_DIR Eigen/Dense
 )
 include_directories(${EIGEN3_INCLUDE_DIR})
 
-# Find and link Boost
-find_package(Boost REQUIRED python)
+# Find Boost headers for compilation (conda version is fine for header-only features)
+find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
+set(Boost_LIBRARIES "")
 
 # Find and link LAPACK
 find_package(LAPACK REQUIRED)
@@ -45,6 +46,16 @@ find_library(libRDKitSmilesParse NAMES "RDKitSmilesParse")
 find_library(libRDKitSubgraphs NAMES "RDKitSubgraphs")
 find_library(libRDKitSubstructMatch NAMES "RDKitSubstructMatch")
 
+# Find pip wheel's Boost.Python to match RDKit's Boost ABI
+execute_process(COMMAND ${Python3_EXECUTABLE} -c "import site; print(site.getsitepackages()[0])"
+    OUTPUT_VARIABLE _site_pkg OUTPUT_STRIP_TRAILING_WHITESPACE)
+file(GLOB _rdkit_boost_python "${_site_pkg}/rdkit.libs/libboost_python311-*.so*")
+if(NOT _rdkit_boost_python)
+    find_package(Boost REQUIRED python)
+    set(_rdkit_boost_python ${Boost_PYTHON_LIBRARY})
+endif()
+message(STATUS "Boost.Python: ${_rdkit_boost_python}")
+
 # Find and link RDKit libraries
 target_link_libraries(_osmordred PRIVATE
     ${libRDKitDataStructs}
@@ -57,8 +68,7 @@ target_link_libraries(_osmordred PRIVATE
     ${libRDKitSubgraphs}
     ${libRDKitSubstructMatch}
     ${LAPACK_LIBRARIES}
-    ${Boost_LIBRARIES}
-    ${Boost_PYTHON_LIBRARY}  # Ensure Boost.Python is linked
+    ${_rdkit_boost_python}  # pip wheel's Boost.Python (matches RDKit's Boost ABI)
     ${Python3_LIBRARIES}
     )
 

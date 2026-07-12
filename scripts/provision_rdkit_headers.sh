@@ -4,7 +4,7 @@ set -e
 RDKIT_INCLUDE="$CONDA_PREFIX/include/rdkit"
 
 already_provisioned() {
-    [ -f "$RDKIT_INCLUDE/GraphMol/ROMol.h" ]
+    [ -f "$RDKIT_INCLUDE/GraphMol/ROMol.h" ] && [ -f "$RDKIT_INCLUDE/RDGeneral/export.h" ]
 }
 
 if already_provisioned; then
@@ -42,7 +42,7 @@ for subdir in $(find "$SRCDIR/Code" -type d); do
     find "$subdir" -maxdepth 1 -name "*.h" -exec cp {} "$RDKIT_INCLUDE/$rel/" \; 2>/dev/null || true
 done
 
-cp "$TMPDIR/build/Code/RDGeneral/export.h.tmp" "$RDKIT_INCLUDE/RDGeneral/export.h"
+cp "$TMPDIR/build/RDGeneral/export.h.tmp" "$RDKIT_INCLUDE/RDGeneral/export.h"
 cp "$SRCDIR/Code/RDGeneral/RDExportMacros.h" "$RDKIT_INCLUDE/RDGeneral/"
 
 cat > "$RDKIT_INCLUDE/RDGeneral/RDConfig.h" << 'RDCEOF'
@@ -60,8 +60,25 @@ cat > "$RDKIT_INCLUDE/RDGeneral/RDConfig.h" << 'RDCEOF'
 #define RDK_BUILD_SLN_SUPPORT
 #define RDK_BUILD_CAIRO_SUPPORT
 #define RDK_BUILD_FREETYPE_SUPPORT
-#define RDK_USE_URF
 #define RDK_BUILD_YAEHMOP_SUPPORT
+#define RDK_BUILD_CHEMDRAW_SUPPORT
+#define RDK_BUILD_XYZ2MOL_SUPPORT
 RDCEOF
+
+# Create symlinks for RDKit shared libraries from pip wheel's rdkit.libs
+RDKIT_LIBS=$(python -c "import site; print(site.getsitepackages()[0])" 2>/dev/null)/rdkit.libs
+if [ -d "$RDKIT_LIBS" ]; then
+    find "$RDKIT_LIBS" -name "*.so*" -type f | while read -r lib; do
+        bn=$(basename "$lib")
+        ln -sf "$lib" "$CONDA_PREFIX/lib/$bn"
+    done
+    # Create standard-name symlinks for find_library/cmake compatibility
+    for f in "$RDKIT_LIBS"/libRDKit*.so.1; do
+        base=$(basename "$f" | sed 's/-[a-f0-9]*//')
+        ln -sf "$f" "$CONDA_PREFIX/lib/$base"
+        ln -sf "$base" "$CONDA_PREFIX/lib/${base%.so.1}.so"
+    done
+    echo "RDKit shared library symlinks created in $CONDA_PREFIX/lib"
+fi
 
 echo "RDKit C++ headers provisioned at $RDKIT_INCLUDE"

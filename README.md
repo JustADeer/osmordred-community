@@ -32,11 +32,17 @@ pip install -v .
 ```
 
 ### Method 2: into your current environment
+
+Install RDKit via pip for the latest version (2026.03.x), or via conda-forge for an older stable version:
+
 ```
-conda install -y boost eigen lapack ninja rdkit scikit-build numpy -c conda-forge
+conda install -y boost eigen lapack ninja scikit-build numpy -c conda-forge
+pip install rdkit  # latest; or `conda install rdkit -c conda-forge` for older stable
 source scripts/provision_rdkit_headers.sh
 pip install -v .
 ```
+
+> **Note:** The provisioning script downloads matching C++ headers from the RDKit source tag and (for pip-wheel installs) creates symlinks from the wheel's bundled libraries into `${CONDA_PREFIX}/lib/` so the C++ build can find them.
 
 ### Verify
 ```
