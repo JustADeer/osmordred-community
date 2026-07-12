@@ -5,7 +5,7 @@ project(osmordred)
 # Set policies
 cmake_policy(SET CMP0144 NEW)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # define the C++ library "_cppmordred"
@@ -21,7 +21,7 @@ include_directories(${RDKit_INCLUDE_DIRS})
 
 # Find and link Eigen
 find_path(EIGEN3_INCLUDE_DIR Eigen/Dense
-    PATH_SUFFIXES /eigen
+    PATH_SUFFIXES include/eigen3
     REQUIRED
 )
 include_directories(${EIGEN3_INCLUDE_DIR})
@@ -69,6 +69,6 @@ set_target_properties(_osmordred PROPERTIES
 
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-set(CMAKE_INSTALL_RPATH "${Python3_ROOT_DIR}/lib;/opt/homebrew/opt/lapack/lib")
+set(CMAKE_INSTALL_RPATH "${Python3_LIBRARY_DIRS}")
 
 install(TARGETS _osmordred LIBRARY DESTINATION osmordred)

@@ -1,0 +1,28 @@
+name: ci
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    name: ${{ matrix.os }} py${{ matrix.py }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-13, macos-14]
+        py: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          python-version: ${{ matrix.py }}
+          activate-environment: osmordred-community
+      - shell: bash -el {0}
+        run: |
+          conda install -y boost eigen lapack ninja rdkit scikit-build numpy -c conda-forge
+          source scripts/provision_rdkit_headers.sh
+          pip install -v .
+          python -c "import osmordred; print('OK')"

@@ -9,9 +9,9 @@ function print_error {
 trap print_error ERR
 
 echo "Removing existing environment (if present)"
-conda env remove -y -n osmordred &>/dev/null || true
+conda env remove -y -n osmordred-community &>/dev/null || true
 
-conda_packages="boost==1.82.0 eigen lapack ninja python-build rdkit==2023.9.3"
+conda_packages="boost eigen lapack ninja rdkit"
 if [[ "$OSTYPE" =~ ^darwin.* ]]; then
     echo "Creating conda env with MacOS packages"
     conda_packages="$conda_packages blas=*=*openblas"
@@ -23,4 +23,8 @@ else
     exit 1
 fi
 
-conda create -y -n osmordred $conda_packages python=3.11 -c conda-forge
+conda create -y -n osmordred-community $conda_packages python=3.11 -c conda-forge
+
+eval "$(conda shell.bash hook)"
+conda activate osmordred-community
+source "$(dirname "$0")/scripts/provision_rdkit_headers.sh"
