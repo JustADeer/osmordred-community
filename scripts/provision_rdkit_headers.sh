@@ -42,7 +42,19 @@ for subdir in $(find "$SRCDIR/Code" -type d); do
     find "$subdir" -maxdepth 1 -name "*.h" -exec cp {} "$RDKIT_INCLUDE/$rel/" \; 2>/dev/null || true
 done
 
-cp "$TMPDIR/build/RDGeneral/export.h.tmp" "$RDKIT_INCLUDE/RDGeneral/export.h"
+# Try to copy the generated export.h.tmp, but fall back to generating it if missing
+if [ -f "$TMPDIR/build/RDGeneral/export.h.tmp" ]; then
+    cp "$TMPDIR/build/RDGeneral/export.h.tmp" "$RDKIT_INCLUDE/RDGeneral/export.h"
+else
+    echo "Warning: export.h.tmp not found, generating basic export.h"
+    cat > "$RDKIT_INCLUDE/RDGeneral/export.h" << 'EXPORTEOF'
+#ifndef RDGENERAL_EXPORT_H
+#define RDGENERAL_EXPORT_H
+#define RDKIT_EXPORT
+#endif
+EXPORTEOF
+fi
+
 cp "$SRCDIR/Code/RDGeneral/RDExportMacros.h" "$RDKIT_INCLUDE/RDGeneral/"
 
 cat > "$RDKIT_INCLUDE/RDGeneral/RDConfig.h" << 'RDCEOF'
